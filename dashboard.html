@@ -9,31 +9,100 @@
 <body>
     <div class="container">
         <div class="form-container">
-            <h1 id="welcome-message">Carregando...</h1>
-            <p>Este é o seu painel de controle. Em breve, as funcionalidades aparecerão aqui.</p>
-            <button id="logout-button">Sair</button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 id="welcome-message">Carregando...</h1>
+                <button id="logout-button" style="width: auto; padding: 8px 12px; background-color: #718096;">Sair</button>
+            </div>
+            <hr style="margin: 24px 0; border-color: #e2e8f0;">
+
+            <h2>Configurações do Assistente</h2>
+            <p>Preencha estas informações para treinar sua IA.</p>
+
+            <form id="settings-form">
+                <div class="input-group">
+                    <label for="specialty">Sua Especialidade</label>
+                    <input type="text" id="specialty" placeholder="Ex: Cardiologia, Nutrição...">
+                </div>
+                <div class="input-group">
+                    <label for="insurances">Convênios que você aceita (separados por vírgula)</label>
+                    <input type="text" id="insurances" placeholder="Ex: Unimed, SulAmérica, Bradesco Saúde...">
+                </div>
+                <div class="input-group">
+                    <label for="address">Endereço da Clínica</label>
+                    <textarea id="address" rows="3" placeholder="Ex: Rua das Flores, 123, Sala 4, São Paulo - SP"></textarea>
+                </div>
+                <button type="submit">Salvar Configurações</button>
+            </form>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Pega os dados do usuário que salvamos no login
-            const user = JSON.parse(localStorage.getItem('bravoria_user'));
+            const backendUrl = 'https://bravoria-backend.onrender.com'; // SUA URL
+            const user = JSON.parse(localStorage.getItem('bravoria_user' ));
 
             if (!user) {
-                // Se não houver usuário logado, volta para a página de login
                 window.location.href = 'index.html';
-            } else {
-                // Exibe a mensagem de boas-vindas
-                document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${user.fullName}!`;
+                return;
             }
 
-            // Lógica do botão de sair
+            document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${user.fullName}!`;
             document.getElementById('logout-button').addEventListener('click', () => {
-                localStorage.removeItem('bravoria_user'); // Limpa os dados do usuário
-                alert('Você foi desconectado.');
+                localStorage.removeItem('bravoria_user');
                 window.location.href = 'index.html';
             });
+
+            const settingsForm = document.getElementById('settings-form');
+            const specialtyInput = document.getElementById('specialty');
+            const insurancesInput = document.getElementById('insurances');
+            const addressInput = document.getElementById('address');
+
+            // 1. Buscar configurações existentes ao carregar a página
+            async function fetchSettings() {
+                try {
+                    const response = await fetch(`${backendUrl}/settings/${user.id}`);
+                    if (response.ok) {
+                        const settings = await response.json();
+                        specialtyInput.value = settings.specialty || '';
+                        insurancesInput.value = settings.insurances || '';
+                        addressInput.value = settings.address || '';
+                    } else {
+                        console.log('Nenhuma configuração salva ainda.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar configurações:', error);
+                }
+            }
+
+            // 2. Salvar configurações ao enviar o formulário
+            settingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const settingsData = {
+                    userId: user.id,
+                    specialty: specialtyInput.value,
+                    insurances: insurancesInput.value,
+                    address: addressInput.value
+                };
+
+                try {
+                    const response = await fetch(`${backendUrl}/settings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(settingsData)
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message);
+                    } else {
+                        alert(`Erro: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar configurações:', error);
+                    alert('Não foi possível salvar as configurações.');
+                }
+            });
+
+            fetchSettings(); // Chama a função para preencher o formulário
         });
     </script>
 </body>
