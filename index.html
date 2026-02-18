@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- Formulário de Login (Começa visível) -->
+        <!-- Formulário de Login (ID: login-form) -->
         <div class="form-container" id="login-container">
             <h2>Acesse sua conta</h2>
             <p>Que bom te ver de volta!</p>
@@ -17,10 +17,10 @@
                 <div class="input-group"><label for="login-password">Senha</label><input type="password" id="login-password" required></div>
                 <button type="submit">Entrar</button>
             </form>
-            <p class="toggle-link">Não tem uma conta? <a href="#" id="show-register">Cadastre-se</a></p>
+            <p class="toggle-link">Não tem uma conta? <a href="#" id="show-register-link">Cadastre-se</a></p>
         </div>
 
-        <!-- Formulário de Cadastro (Começa escondido) -->
+        <!-- Formulário de Cadastro (ID: register-form) -->
         <div class="form-container" id="register-container" style="display: none;">
             <h2>Bem-vindo à Bravor.ia</h2>
             <p>Sua clínica, mais inteligente.</p>
@@ -30,7 +30,7 @@
                 <div class="input-group"><label for="register-password">Senha</label><input type="password" id="register-password" required minlength="6"></div>
                 <button type="submit">Criar Conta</button>
             </form>
-            <p class="toggle-link">Já tem uma conta? <a href="#" id="show-login">Faça login</a></p>
+            <p class="toggle-link">Já tem uma conta? <a href="#" id="show-login-link">Faça login</a></p>
         </div>
     </div>
     <script src="script.js" defer></script>
