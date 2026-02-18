@@ -8,31 +8,24 @@
 </head>
 <body>
     <div class="container">
-        <div class="form-container">
-            <h1>Bem-vindo à Bravor.ia</h1>
-            <p>Sua clínica, mais inteligente.</p>
-            
-            <form id="register-form">
+        <div class="form-container" id="login-container">
+            <h2>Acesse sua conta</h2>
+            <p>Que bom te ver de volta!</p>
+            <form id="login-form">
                 <div class="input-group">
-                    <label for="fullname">Nome Completo</label>
-                    <input type="text" id="fullname" name="fullname" required>
+                    <label for="login-email">E-mail</label>
+                    <input type="email" id="login-email" required>
                 </div>
                 <div class="input-group">
-                    <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required>
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" required>
                 </div>
-                <div class="input-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <button type="submit">Criar Conta</button>
+                <button type="submit">Entrar</button>
             </form>
-            
-            <div class="switch-form">
-                <p>Já tem uma conta? <a href="#">Faça login</a></p>
-            </div>
+            <p class="toggle-link">Não tem uma conta? <a href="register.html">Cadastre-se</a></p>
         </div>
     </div>
-    <script src="script.js"></script>
+    <!-- A LINHA MAIS IMPORTANTE -->
+    <script src="script.js" defer></script>
 </body>
 </html>
