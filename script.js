@@ -1,48 +1,91 @@
-// Aguarda o conteúdo da página ser totalmente carregado
 document.addEventListener('DOMContentLoaded', () => {
-    const registerForm = document.getElementById('register-form');
+    const backendUrl = 'https://bravoria-backend.onrender.com'; // SUA URL JÁ ESTÁ AQUI
 
-    registerForm.addEventListener('submit', async (event) => {
-        // Previne o comportamento padrão do formulário (recarregar a página)
+    const formContainer = document.querySelector('.form-container' );
+    let isLogin = false;
+
+    function renderForm() {
+        const formHtml = `
+            <h1>${isLogin ? 'Acesse sua conta' : 'Bem-vindo à Bravor.ia'}</h1>
+            <p>${isLogin ? 'Que bom te ver de volta!' : 'Sua clínica, mais inteligente.'}</p>
+            
+            <form id="auth-form">
+                ${!isLogin ? `
+                <div class="input-group">
+                    <label for="fullname">Nome Completo</label>
+                    <input type="text" id="fullname" name="fullname" required>
+                </div>` : ''}
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">${isLogin ? 'Entrar' : 'Criar Conta'}</button>
+            </form>
+            
+            <div class="switch-form">
+                <p>
+                    ${isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}
+                    <a href="#" id="switch-link">${isLogin ? 'Cadastre-se' : 'Faça login'}</a>
+                </p>
+            </div>
+        `;
+        formContainer.innerHTML = formHtml;
+        attachEventListeners();
+    }
+
+    function attachEventListeners() {
+        document.getElementById('switch-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            isLogin = !isLogin;
+            renderForm();
+        });
+
+        document.getElementById('auth-form').addEventListener('submit', handleFormSubmit);
+    }
+
+    async function handleFormSubmit(event) {
         event.preventDefault();
-
-        // Pega os valores dos campos do formulário
-        const fullName = document.getElementById('fullname').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-
-        // !! IMPORTANTE: Substitua pela URL do seu backend na Render !!
-        const backendUrl = 'https://bravoria-backend.onrender.com';
+        const endpoint = isLogin ? '/login' : '/register';
+        
+        const body = { email, password };
+        if (!isLogin) {
+            body.fullName = document.getElementById('fullname').value;
+        }
 
         try {
-            // Envia os dados para o backend usando o método POST
-            const response = await fetch(`${backendUrl}/register`, {
+            const response = await fetch(`${backendUrl}${endpoint}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    fullName: fullName,
-                    email: email,
-                    password: password,
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
             });
 
             const result = await response.json();
 
             if (response.ok) {
-                // Se a resposta for bem-sucedida (status 2xx)
-                alert('Conta criada com sucesso! Você será redirecionado.');
-                // Futuramente, redirecionar para o painel de controle:
-                // window.location.href = '/dashboard.html'; 
+                if (isLogin) {
+                    alert(result.message);
+                    // Salva os dados do usuário no navegador para usar no dashboard
+                    localStorage.setItem('bravoria_user', JSON.stringify(result.user));
+                    window.location.href = 'dashboard.html'; // Redireciona para o painel
+                } else {
+                    alert('Conta criada com sucesso! Agora faça o login.');
+                    isLogin = true;
+                    renderForm();
+                }
             } else {
-                // Se o servidor retornar um erro (ex: e-mail já existe)
                 alert(`Erro: ${result.message}`);
             }
         } catch (error) {
-            // Se houver um erro de rede (backend fora do ar, etc)
-            console.error('Erro de comunicação com o servidor:', error);
-            alert('Não foi possível se conectar ao servidor. Tente novamente mais tarde.');
+            console.error('Erro de comunicação:', error);
+            alert('Não foi possível se conectar ao servidor.');
         }
-    });
+    }
+
+    renderForm(); // Inicia a renderização do formulário
 });
