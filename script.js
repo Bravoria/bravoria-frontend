@@ -1,91 +1,70 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const backendUrl = 'https://bravoria-backend.onrender.com'; // SUA URL JÁ ESTÁ AQUI
+    const backendUrl = 'https://bravoria-backend.onrender.com';
 
-    const formContainer = document.querySelector('.form-container' );
-    let isLogin = false;
+    const loginContainer = document.getElementById('login-container' );
+    const registerContainer = document.getElementById('register-container');
+    const showRegisterLink = document.getElementById('show-register');
+    const showLoginLink = document.getElementById('show-login');
 
-    function renderForm() {
-        const formHtml = `
-            <h1>${isLogin ? 'Acesse sua conta' : 'Bem-vindo à Bravor.ia'}</h1>
-            <p>${isLogin ? 'Que bom te ver de volta!' : 'Sua clínica, mais inteligente.'}</p>
-            
-            <form id="auth-form">
-                ${!isLogin ? `
-                <div class="input-group">
-                    <label for="fullname">Nome Completo</label>
-                    <input type="text" id="fullname" name="fullname" required>
-                </div>` : ''}
-                <div class="input-group">
-                    <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="input-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <button type="submit">${isLogin ? 'Entrar' : 'Criar Conta'}</button>
-            </form>
-            
-            <div class="switch-form">
-                <p>
-                    ${isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}
-                    <a href="#" id="switch-link">${isLogin ? 'Cadastre-se' : 'Faça login'}</a>
-                </p>
-            </div>
-        `;
-        formContainer.innerHTML = formHtml;
-        attachEventListeners();
-    }
+    // Lógica para alternar entre os formulários
+    showRegisterLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginContainer.style.display = 'none';
+        registerContainer.style.display = 'block';
+    });
 
-    function attachEventListeners() {
-        document.getElementById('switch-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            isLogin = !isLogin;
-            renderForm();
-        });
+    showLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+    });
 
-        document.getElementById('auth-form').addEventListener('submit', handleFormSubmit);
-    }
-
-    async function handleFormSubmit(event) {
-        event.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const endpoint = isLogin ? '/login' : '/register';
-        
-        const body = { email, password };
-        if (!isLogin) {
-            body.fullName = document.getElementById('fullname').value;
-        }
-
+    // Lógica do Formulário de Cadastro
+    const registerForm = document.getElementById('register-form');
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fullName = document.getElementById('register-fullname').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
         try {
-            const response = await fetch(`${backendUrl}${endpoint}`, {
+            const response = await fetch(`${backendUrl}/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
+                body: JSON.stringify({ fullName, email, password })
             });
-
             const result = await response.json();
-
             if (response.ok) {
-                if (isLogin) {
-                    alert(result.message);
-                    // Salva os dados do usuário no navegador para usar no dashboard
-                    localStorage.setItem('bravoria_user', JSON.stringify(result.user));
-                    window.location.href = 'dashboard.html'; // Redireciona para o painel
-                } else {
-                    alert('Conta criada com sucesso! Agora faça o login.');
-                    isLogin = true;
-                    renderForm();
-                }
+                alert('Conta criada com sucesso! Agora você pode fazer o login.');
+                showLoginLink.click(); // Simula o clique para voltar à tela de login
             } else {
-                alert(`Erro: ${result.message}`);
+                alert(`Erro ao criar conta: ${result.message}`);
             }
         } catch (error) {
-            console.error('Erro de comunicação:', error);
-            alert('Não foi possível se conectar ao servidor.');
+            alert('Não foi possível se conectar ao servidor para criar a conta.');
         }
-    }
+    });
 
-    renderForm(); // Inicia a renderização do formulário
+    // Lógica do Formulário de Login
+    const loginForm = document.getElementById('login-form');
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        try {
+            const response = await fetch(`${backendUrl}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                localStorage.setItem('bravoria_user', JSON.stringify(result.user));
+                window.location.href = 'dashboard.html';
+            } else {
+                alert(`Falha no login: ${result.message}`);
+            }
+        } catch (error) {
+            alert('Não foi possível se conectar ao servidor para fazer o login.');
+        }
+    });
 });
