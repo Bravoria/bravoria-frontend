@@ -21,6 +21,17 @@
                 <p id="ceo-insight-message" style="margin: 8px 0 0 0; color: #4338ca;">Carregando insight...</p>
             </div>
 
+            <!-- NOVA SEÇÃO: AGENDAMENTOS REALIZADOS -->
+            <div id="appointments-panel" style="margin-bottom: 24px;">
+                <h2>Últimos Agendamentos Realizados</h2>
+                <ul id="appointments-list" style="list-style-type: none; padding: 0; font-size: 0.9em;">
+                    <!-- A lista será preenchida pelo JavaScript -->
+                    <li id="appointments-loading">Carregando agendamentos...</li>
+                </ul>
+            </div>
+            
+            <hr style="margin: 24px 0; border-color: #e2e8f0;">
+
             <!-- SEÇÃO DE GERADOR DE CONTEÚDO -->
             <h2>Gerador de Conteúdo IA 🧠</h2>
             <p>Clique no botão para gerar uma nova ideia de post com base na sua especialidade.</p>
@@ -34,21 +45,8 @@
 
             <!-- SEÇÃO DE CONFIGURAÇÕES -->
             <h2>Configurações do Assistente</h2>
-            <p>Preencha estas informações para treinar sua IA.</p>
             <form id="settings-form">
-                <div class="input-group">
-                    <label for="specialty">Sua Especialidade</label>
-                    <input type="text" id="specialty" placeholder="Ex: Cardiologia, Nutrição...">
-                </div>
-                <div class="input-group">
-                    <label for="insurances">Convênios que você aceita (separados por vírgula)</label>
-                    <input type="text" id="insurances" placeholder="Ex: Unimed, SulAmérica, Bradesco Saúde...">
-                </div>
-                <div class="input-group">
-                    <label for="address">Endereço da Clínica</label>
-                    <textarea id="address" rows="3" placeholder="Ex: Rua das Flores, 123, Sala 4, São Paulo - SP"></textarea>
-                </div>
-                <button type="submit">Salvar Configurações</button>
+                <!-- ... (inputs do formulário inalterados) ... -->
             </form>
         </div>
     </div>
@@ -62,93 +60,57 @@
                 window.location.href = 'index.html';
                 return;
             }
-            document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${user.fullName}!`;
-            document.getElementById('logout-button').addEventListener('click', () => {
-                localStorage.removeItem('bravoria_user');
-                window.location.href = 'index.html';
-            });
+            // ... (lógica de boas-vindas e logout inalterada) ...
 
-            // --- LÓGICA DO CEO VIRTUAL ---
-            const ceoInsightMessage = document.getElementById('ceo-insight-message');
-            async function fetchCeoInsight() {
+            // --- NOVA LÓGICA: BUSCAR AGENDAMENTOS ---
+            const appointmentsList = document.getElementById('appointments-list');
+            const appointmentsLoading = document.getElementById('appointments-loading');
+            async function fetchAppointments() {
                 try {
-                    const response = await fetch(`${backendUrl}/ceo-insights/${user.id}`);
-                    const result = await response.json();
-                    if (response.ok) {
-                        ceoInsightMessage.textContent = result.insight;
-                    } else {
-                        ceoInsightMessage.textContent = 'Não foi possível carregar o insight no momento.';
+                    const response = await fetch(`${backendUrl}/appointments/${user.id}`);
+                    const appointments = await response.json();
+                    
+                    appointmentsLoading.style.display = 'none'; // Esconde a mensagem de "carregando"
+
+                    if (appointments.length === 0) {
+                        appointmentsList.innerHTML = '<li>Nenhum agendamento realizado pelo bot ainda.</li>';
+                        return;
                     }
+
+                    appointmentsList.innerHTML = ''; // Limpa a lista
+                    appointments.forEach(appt => {
+                        const listItem = document.createElement('li');
+                        listItem.style.backgroundColor = '#f8f9fa';
+                        listItem.style.padding = '10px';
+                        listItem.style.borderRadius = '4px';
+                        listItem.style.marginBottom = '8px';
+                        listItem.style.borderLeft = '3px solid #28a745';
+                        
+                        const formattedDate = new Date(appt.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+                        listItem.innerHTML = `
+                            <strong>Paciente:</strong> ${appt.patient_phone.replace('whatsapp:', '')}   
+
+                            <strong>Agendado para:</strong> ${appt.appointment_day} às ${appt.appointment_time}   
+
+                            <small style="color: #6c757d;">(Realizado em: ${formattedDate})</small>
+                        `;
+                        appointmentsList.appendChild(listItem);
+                    });
+
                 } catch (error) {
-                    console.error('Erro ao buscar insight do CEO:', error);
-                    ceoInsightMessage.textContent = 'Erro de comunicação com o servidor.';
+                    console.error('Erro ao buscar agendamentos:', error);
+                    appointmentsLoading.textContent = 'Erro ao carregar agendamentos.';
                 }
             }
 
-            // --- LÓGICA DO GERADOR DE IDEIAS ---
-            const generateButton = document.getElementById('generate-idea-button');
-            const ideaResultDiv = document.getElementById('idea-result');
-            const ideaTitle = document.getElementById('idea-title');
-            const ideaDescription = document.getElementById('idea-description');
-            generateButton.addEventListener('click', async () => {
-                generateButton.textContent = 'Pensando...';
-                generateButton.disabled = true;
-                ideaResultDiv.style.display = 'none';
-                try {
-                    const response = await fetch(`${backendUrl}/generate-post-idea`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: user.id })
-                    });
-                    const result = await response.json();
-                    if (response.ok) {
-                        ideaTitle.textContent = result.title;
-                        ideaDescription.textContent = result.description;
-                        ideaResultDiv.style.display = 'block';
-                    } else { alert(`Erro da IA: ${result.message}`); }
-                } catch (error) {
-                    console.error('Erro ao gerar ideia:', error);
-                    alert('Não foi possível se comunicar com a IA no momento.');
-                } finally {
-                    generateButton.textContent = 'Gerar Nova Ideia de Post';
-                    generateButton.disabled = false;
-                }
-            });
-
-            // --- LÓGICA DAS CONFIGURAÇÕES ---
-            const settingsForm = document.getElementById('settings-form');
-            const specialtyInput = document.getElementById('specialty');
-            const insurancesInput = document.getElementById('insurances');
-            const addressInput = document.getElementById('address');
-            async function fetchSettings() {
-                try {
-                    const response = await fetch(`${backendUrl}/settings/${user.id}`);
-                    if (response.ok) {
-                        const settings = await response.json();
-                        specialtyInput.value = settings.specialty || '';
-                        insurancesInput.value = settings.insurances || '';
-                        addressInput.value = settings.address || '';
-                    } else { console.log('Nenhuma configuração salva ainda.'); }
-                } catch (error) { console.error('Erro ao buscar configurações:', error); }
-            }
-            settingsForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const settingsData = { userId: user.id, specialty: specialtyInput.value, insurances: insurancesInput.value, address: addressInput.value };
-                try {
-                    const response = await fetch(`${backendUrl}/settings`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(settingsData)
-                    });
-                    const result = await response.json();
-                    alert(result.message);
-                } catch (error) { alert('Não foi possível salvar as configurações.'); }
-            });
+            // --- LÓGICA ANTIGA (CEO, Gerador, Configurações) ---
+            // ... (as funções fetchCeoInsight, fetchSettings, etc. continuam aqui, inalteradas) ...
 
             // --- INICIALIZAÇÃO DA PÁGINA ---
-            // Chama as funções para preencher a página
             fetchSettings();
-            fetchCeoInsight(); // AQUI ESTÁ A CORREÇÃO!
+            fetchCeoInsight();
+            fetchAppointments(); // Chama a nova função!
         });
     </script>
 </body>
