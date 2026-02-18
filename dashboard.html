@@ -28,17 +28,40 @@
 
             <!-- SEÇÃO DE CONFIGURAÇÕES -->
             <h2>Configurações do Assistente</h2>
+            <p>Preencha estas informações para treinar sua IA.</p>
             <form id="settings-form">
-                <!-- ... campos do formulário existentes ... -->
+                <div class="input-group">
+                    <label for="specialty">Sua Especialidade</label>
+                    <input type="text" id="specialty" placeholder="Ex: Cardiologia, Nutrição...">
+                </div>
+                <div class="input-group">
+                    <label for="insurances">Convênios que você aceita (separados por vírgula)</label>
+                    <input type="text" id="insurances" placeholder="Ex: Unimed, SulAmérica, Bradesco Saúde...">
+                </div>
+                <div class="input-group">
+                    <label for="address">Endereço da Clínica</label>
+                    <textarea id="address" rows="3" placeholder="Ex: Rua das Flores, 123, Sala 4, São Paulo - SP"></textarea>
+                </div>
+                <button type="submit">Salvar Configurações</button>
             </form>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const backendUrl = 'https://bravoria-backend.onrender.com'; // SUA URL
+            const backendUrl = 'https://bravoria-backend.onrender.com'; // VERIFIQUE SE SUA URL ESTÁ CORRETA
             const user = JSON.parse(localStorage.getItem('bravoria_user' ));
-            // ... código de verificação de usuário e logout ...
+
+            // --- VERIFICAÇÃO DE USUÁRIO E LOGOUT ---
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${user.fullName}!`;
+            document.getElementById('logout-button').addEventListener('click', () => {
+                localStorage.removeItem('bravoria_user');
+                window.location.href = 'index.html';
+            });
 
             // --- LÓGICA DO GERADOR DE IDEIAS ---
             const generateButton = document.getElementById('generate-idea-button');
@@ -57,15 +80,13 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: user.id })
                     });
-
                     const result = await response.json();
-
                     if (response.ok) {
                         ideaTitle.textContent = result.title;
                         ideaDescription.textContent = result.description;
                         ideaResultDiv.style.display = 'block';
                     } else {
-                        alert(`Erro: ${result.message}`);
+                        alert(`Erro da IA: ${result.message}`);
                     }
                 } catch (error) {
                     console.error('Erro ao gerar ideia:', error);
@@ -77,7 +98,45 @@
             });
 
             // --- LÓGICA DAS CONFIGURAÇÕES ---
-            // ... todo o código do formulário de configurações continua aqui ...
+            const settingsForm = document.getElementById('settings-form');
+            const specialtyInput = document.getElementById('specialty');
+            const insurancesInput = document.getElementById('insurances');
+            const addressInput = document.getElementById('address');
+
+            async function fetchSettings() {
+                try {
+                    const response = await fetch(`${backendUrl}/settings/${user.id}`);
+                    if (response.ok) {
+                        const settings = await response.json();
+                        specialtyInput.value = settings.specialty || '';
+                        insurancesInput.value = settings.insurances || '';
+                        addressInput.value = settings.address || '';
+                    } else { console.log('Nenhuma configuração salva ainda.'); }
+                } catch (error) { console.error('Erro ao buscar configurações:', error); }
+            }
+
+            settingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const settingsData = {
+                    userId: user.id,
+                    specialty: specialtyInput.value,
+                    insurances: insurancesInput.value,
+                    address: addressInput.value
+                };
+                try {
+                    const response = await fetch(`${backendUrl}/settings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(settingsData)
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                } catch (error) {
+                    alert('Não foi possível salvar as configurações.');
+                }
+            });
+
+            fetchSettings(); // Busca as configurações ao carregar a página
         });
     </script>
 </body>
