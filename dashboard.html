@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <!-- ... (head continua o mesmo) ... -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bravor.ia - Painel</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="form-container">
-            <!-- ... (cabeçalho com mensagem de boas-vindas e botão de sair) ... -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 id="welcome-message">Carregando...</h1>
+                <button id="logout-button" style="width: auto; padding: 8px 12px; background-color: #718096;">Sair</button>
+            </div>
             <hr style="margin: 24px 0; border-color: #e2e8f0;">
 
             <!-- PAINEL DO CEO VIRTUAL -->
@@ -15,7 +21,35 @@
                 <p id="ceo-insight-message" style="margin: 8px 0 0 0; color: #4338ca;">Carregando insight...</p>
             </div>
 
-            <!-- ... (seção do Gerador de Conteúdo e das Configurações continuam aqui) ... -->
+            <!-- SEÇÃO DE GERADOR DE CONTEÚDO -->
+            <h2>Gerador de Conteúdo IA 🧠</h2>
+            <p>Clique no botão para gerar uma nova ideia de post com base na sua especialidade.</p>
+            <button id="generate-idea-button">Gerar Ideia de Post</button>
+            <div id="idea-result" style="display: none; margin-top: 20px; background-color: #f4f7f6; padding: 15px; border-radius: 6px; text-align: left;">
+                <h4 id="idea-title"></h4>
+                <p id="idea-description" style="margin-bottom: 0;"></p>
+            </div>
+            
+            <hr style="margin: 24px 0; border-color: #e2e8f0;">
+
+            <!-- SEÇÃO DE CONFIGURAÇÕES -->
+            <h2>Configurações do Assistente</h2>
+            <p>Preencha estas informações para treinar sua IA.</p>
+            <form id="settings-form">
+                <div class="input-group">
+                    <label for="specialty">Sua Especialidade</label>
+                    <input type="text" id="specialty" placeholder="Ex: Cardiologia, Nutrição...">
+                </div>
+                <div class="input-group">
+                    <label for="insurances">Convênios que você aceita (separados por vírgula)</label>
+                    <input type="text" id="insurances" placeholder="Ex: Unimed, SulAmérica, Bradesco Saúde...">
+                </div>
+                <div class="input-group">
+                    <label for="address">Endereço da Clínica</label>
+                    <textarea id="address" rows="3" placeholder="Ex: Rua das Flores, 123, Sala 4, São Paulo - SP"></textarea>
+                </div>
+                <button type="submit">Salvar Configurações</button>
+            </form>
         </div>
     </div>
 
@@ -23,7 +57,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             const backendUrl = 'https://bravoria-backend.onrender.com';
             const user = JSON.parse(localStorage.getItem('bravoria_user' ));
-            // ... (código de verificação de usuário e logout) ...
+
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('welcome-message').textContent = `Bem-vindo(a), ${user.fullName}!`;
+            document.getElementById('logout-button').addEventListener('click', () => {
+                localStorage.removeItem('bravoria_user');
+                window.location.href = 'index.html';
+            });
 
             // --- LÓGICA DO CEO VIRTUAL ---
             const ceoInsightMessage = document.getElementById('ceo-insight-message');
@@ -42,11 +85,70 @@
                 }
             }
 
-            // ... (lógica do Gerador de Ideias e das Configurações) ...
+            // --- LÓGICA DO GERADOR DE IDEIAS ---
+            const generateButton = document.getElementById('generate-idea-button');
+            const ideaResultDiv = document.getElementById('idea-result');
+            const ideaTitle = document.getElementById('idea-title');
+            const ideaDescription = document.getElementById('idea-description');
+            generateButton.addEventListener('click', async () => {
+                generateButton.textContent = 'Pensando...';
+                generateButton.disabled = true;
+                ideaResultDiv.style.display = 'none';
+                try {
+                    const response = await fetch(`${backendUrl}/generate-post-idea`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: user.id })
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        ideaTitle.textContent = result.title;
+                        ideaDescription.textContent = result.description;
+                        ideaResultDiv.style.display = 'block';
+                    } else { alert(`Erro da IA: ${result.message}`); }
+                } catch (error) {
+                    console.error('Erro ao gerar ideia:', error);
+                    alert('Não foi possível se comunicar com a IA no momento.');
+                } finally {
+                    generateButton.textContent = 'Gerar Nova Ideia de Post';
+                    generateButton.disabled = false;
+                }
+            });
 
+            // --- LÓGICA DAS CONFIGURAÇÕES ---
+            const settingsForm = document.getElementById('settings-form');
+            const specialtyInput = document.getElementById('specialty');
+            const insurancesInput = document.getElementById('insurances');
+            const addressInput = document.getElementById('address');
+            async function fetchSettings() {
+                try {
+                    const response = await fetch(`${backendUrl}/settings/${user.id}`);
+                    if (response.ok) {
+                        const settings = await response.json();
+                        specialtyInput.value = settings.specialty || '';
+                        insurancesInput.value = settings.insurances || '';
+                        addressInput.value = settings.address || '';
+                    } else { console.log('Nenhuma configuração salva ainda.'); }
+                } catch (error) { console.error('Erro ao buscar configurações:', error); }
+            }
+            settingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const settingsData = { userId: user.id, specialty: specialtyInput.value, insurances: insurancesInput.value, address: addressInput.value };
+                try {
+                    const response = await fetch(`${backendUrl}/settings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(settingsData)
+                    });
+                    const result = await response.json();
+                    alert(result.message);
+                } catch (error) { alert('Não foi possível salvar as configurações.'); }
+            });
+
+            // --- INICIALIZAÇÃO DA PÁGINA ---
             // Chama as funções para preencher a página
             fetchSettings();
-            fetchCeoInsight(); 
+            fetchCeoInsight(); // AQUI ESTÁ A CORREÇÃO!
         });
     </script>
 </body>
