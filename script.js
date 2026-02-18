@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loginContainer = document.getElementById('login-container' );
     const registerContainer = document.getElementById('register-container');
-    const showRegisterLink = document.getElementById('show-register');
-    const showLoginLink = document.getElementById('show-login');
+    const showRegisterLink = document.getElementById('show-register-link');
+    const showLoginLink = document.getElementById('show-login-link');
 
     // Lógica para alternar entre os formulários
     if (showRegisterLink && showLoginLink) {
@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(`Erro ao criar conta: ${result.message}`);
                 }
             } catch (error) {
+                console.error('Erro de rede no cadastro:', error);
                 alert('Não foi possível se conectar ao servidor para criar a conta.');
             }
         });
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(`Falha no login: ${result.message}`);
                 }
             } catch (error) {
+                console.error('Erro de rede no login:', error);
                 alert('Não foi possível se conectar ao servidor para fazer o login.');
             }
         });
