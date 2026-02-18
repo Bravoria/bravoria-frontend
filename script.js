@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value;
 
         // !! IMPORTANTE: Substitua pela URL do seu backend na Render !!
-        const backendUrl = https://bravoria-backend.onrender.com;
+        const backendUrl = 'https://bravoria-backend.onrender.com';
 
         try {
             // Envia os dados para o backend usando o método POST
