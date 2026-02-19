@@ -1,77 +1,68 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const backendUrl = 'https://bravoria-backend.onrender.com';
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const toRegisterLink = document.getElementById('to-register');
+    const toLoginLink = document.getElementById('to-login');
 
-    const loginContainer = document.getElementById('login-container' );
-    const registerContainer = document.getElementById('register-container');
-    const showRegisterLink = document.getElementById('show-register-link');
-    const showLoginLink = document.getElementById('show-login-link');
+    // As variáveis de ambiente da Vercel são injetadas aqui
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        console.error("Erro: Variáveis de ambiente do Supabase não configuradas na Vercel!");
+        alert("Erro de configuração do sistema. Por favor, contate o suporte.");
+        return;
+    }
 
     // Lógica para alternar entre os formulários
-    if (showRegisterLink && showLoginLink) {
-        showRegisterLink.addEventListener('click', (e) => {
+    if (toRegisterLink) {
+        toRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
-            loginContainer.style.display = 'none';
-            registerContainer.style.display = 'block';
-        });
-
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerContainer.style.display = 'none';
-            loginContainer.style.display = 'block';
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
         });
     }
 
-    // Lógica do Formulário de Cadastro
-    const registerForm = document.getElementById('register-form');
+    if (toLoginLink) {
+        toLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.style.display = 'none';
+            loginForm.style.display = 'block';
+        });
+    }
+
+    // Lógica do formulário de registro
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const fullName = document.getElementById('register-fullname').value;
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-            try {
-                const response = await fetch(`${backendUrl}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fullName, email, password })
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    alert('Conta criada com sucesso! Agora você pode fazer o login.');
-                    showLoginLink.click();
-                } else {
-                    alert(`Erro ao criar conta: ${result.message}`);
-                }
-            } catch (error) {
-                console.error('Erro de rede no cadastro:', error);
-                alert('Não foi possível se conectar ao servidor para criar a conta.');
-            }
-        });
-    }
 
-    // Lógica do Formulário de Login
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
             try {
-                const response = await fetch(`${backendUrl}/login`, {
+                const response = await fetch(`${supabaseUrl}/functions/v1/register`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey
+                    },
+                    body: JSON.stringify({ fullName, email, password }),
                 });
-                const result = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('bravoria_user', JSON.stringify(result.user));
-                    window.location.href = 'dashboard.html';
-                } else {
-                    alert(`Falha no login: ${result.message}`);
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Falha ao criar conta.');
                 }
+
+                alert('Conta criada com sucesso! Por favor, faça o login.');
+                registerForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                document.getElementById('login-email').value = email;
+                document.getElementById('login-password').focus();
+
             } catch (error) {
-                console.error('Erro de rede no login:', error);
-                alert('Não foi possível se conectar ao servidor para fazer o login.');
+                alert(`Erro: ${error.message}`);
             }
         });
     }
