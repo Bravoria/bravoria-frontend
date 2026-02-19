@@ -4,12 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const toRegisterLink = document.getElementById('to-register');
     const toLoginLink = document.getElementById('to-login');
 
-    // As variáveis de ambiente da Vercel são injetadas aqui
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    // --- INÍCIO DA CONFIGURAÇÃO MANUAL ---
+    // Cole suas chaves públicas aqui. É seguro.
+    const supabaseUrl = 'https://ezgcpdofdoyeftjsyptzp.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6Z2NwZGZkb3llZnRqc3lwdHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NDI4NDksImV4cCI6MjA4NzAxODg0OX0.x7lylm7jv9ydn3gFialol4SH_C5KsddJDRUWgce803Y'; // SUBSTITUA PELA SUA CHAVE ANON
+    // --- FIM DA CONFIGURAÇÃO MANUAL ---
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-        console.error("Erro: Variáveis de ambiente do Supabase não configuradas na Vercel!");
+
+    if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey === 'SUA_CHAVE_ANON_AQUI' ) {
+        console.error("Erro: Chaves do Supabase não configuradas no script.js!");
         alert("Erro de configuração do sistema. Por favor, contate o suporte.");
         return;
     }
