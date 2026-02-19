@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FIM DA CONFIGURAÇÃO MANUAL ---
 
     // Verifica a configuração
-    if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey === 'SUA_CHAVE_ANON_AQUI' ) {
+    if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6Z2NwZGZkb3llZnRqc3lwdHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NDI4NDksImV4cCI6MjA4NzAxODg0OX0.x7lylm7jv9ydn3gFialol4SH_C5KsddJDRUWgce803Y' ) {
         console.error("Erro: Chaves do Supabase não configuradas no script.js!");
         alert("Erro de configuração do sistema. Por favor, contate o suporte.");
         return;
